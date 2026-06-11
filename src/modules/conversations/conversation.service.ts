@@ -12,6 +12,7 @@ import Listing from "../listing/listing.model";
 import { NotificationService } from "../notifications/notifications.service";
 import { NotificationType } from "../notifications/notifications.interface";
 import sharp from "sharp";
+import BlockedUserModel from "../userBlocked/userBlocked.model";
 
 const convert = require("heic-convert");
 
@@ -50,43 +51,43 @@ const sendMessage = async (
   }
 
 
-let mediaUrl: string | undefined;
+  let mediaUrl: string | undefined;
 
-if (file) {
-  console.log("File detected:", file.originalname);
+  if (file) {
+    console.log("File detected:", file.originalname);
 
-  let buffer = file.buffer;
+    let buffer = file.buffer;
 
-  // 👉 HEIC detect
-  if (
-    file.mimetype === "image/heic" ||
-    file.mimetype === "image/heif" ||
-    file.originalname.toLowerCase().endsWith(".heic")
-  ) {
-    try {
-      console.log("HEIC detected, converting...");
+    // 👉 HEIC detect
+    if (
+      file.mimetype === "image/heic" ||
+      file.mimetype === "image/heif" ||
+      file.originalname.toLowerCase().endsWith(".heic")
+    ) {
+      try {
+        console.log("HEIC detected, converting...");
 
-      buffer = await convert({
-        buffer: file.buffer, 
-        format: "JPEG",
-        quality: 0.9,
-      });
+        buffer = await convert({
+          buffer: file.buffer,
+          format: "JPEG",
+          quality: 0.9,
+        });
 
-      console.log("✅ HEIC converted successfully");
-    } catch (err) {
-      console.error("❌ HEIC convert error:", err);
-      throw new Error("HEIC conversion failed");
+        console.log("✅ HEIC converted successfully");
+      } catch (err) {
+        console.error("❌ HEIC convert error:", err);
+        throw new Error("HEIC conversion failed");
+      }
     }
+
+    // 👉 upload to cloudinary
+    const uploadResult = await uploadBufferToCloudinary(
+      buffer,
+      file.originalname + ".jpg"
+    );
+
+    mediaUrl = uploadResult?.secure_url;
   }
-
-  // 👉 upload to cloudinary
-  const uploadResult = await uploadBufferToCloudinary(
-    buffer,
-    file.originalname + ".jpg"
-  );
-
-  mediaUrl = uploadResult?.secure_url;
-}
 
 
   let message = await Message.create({
@@ -121,17 +122,133 @@ if (file) {
   return message;
 };
 
-const getConversationsForUser = async (userId: string, searchTerm?: string) => {
+// const getConversationsForUser = async (userId: string, searchTerm?: string) => {
+//   const userIdObj = new mongoose.Types.ObjectId(userId);
+
+//   const aggregation: any[] = [
+//     // Match conversations for the user
+//     {
+//       $match: {
+//         $or: [{ participantAId: userIdObj }, { participantBId: userIdObj }],
+//       },
+//     },
+//     // Populate participants
+//     {
+//       $lookup: {
+//         from: "users",
+//         localField: "participantAId",
+//         foreignField: "_id",
+//         as: "participantADetails",
+//       },
+//     },
+//     { $unwind: "$participantADetails" },
+//     {
+//       $lookup: {
+//         from: "users",
+//         localField: "participantBId",
+//         foreignField: "_id",
+//         as: "participantBDetails",
+//       },
+//     },
+//     { $unwind: "$participantBDetails" },
+//     // Add a field for the other participant
+//     {
+//       $addFields: {
+//         otherParticipant: {
+//           $cond: {
+//             if: { $eq: ["$participantADetails._id", userIdObj] },
+//             then: "$participantBDetails",
+//             else: "$participantADetails",
+//           },
+//         },
+//       },
+//     },
+
+
+
+//   ];
+
+//   // Filter by search term
+//   if (searchTerm) {
+//     aggregation.push({
+//       $match: {
+//         "otherParticipant.fullName": { $regex: searchTerm, $options: "i" },
+//       },
+//     });
+//   }
+
+//   // Restore original participant fields and clean up
+//   aggregation.push(
+//     {
+//       $addFields: {
+//         participantAId: "$participantADetails",
+//         participantBId: "$participantBDetails",
+//       },
+//     },
+//     {
+//       $project: {
+//         participantADetails: 0,
+//         participantBDetails: 0,
+//         otherParticipant: 0,
+//       },
+//     },
+//   );
+
+//   const conversations = await Conversation.aggregate(aggregation);
+
+//   const conversationsWithDetails = await Promise.all(
+//     conversations.map(async (conversation) => {
+//       const unreadMessagesCount = await Message.countDocuments({
+//         conversationId: conversation._id,
+//         senderId: { $ne: userId },
+//         isRead: false,
+//       });
+
+//       const lastMessage = await Message.findOne({
+//         conversationId: conversation._id,
+//       })
+//         .sort({ sentAt: -1 })
+//         .populate("senderId")
+//         .populate("listing");
+
+//       return {
+//         ...conversation,
+//         hasUnreadMessages: unreadMessagesCount > 0,
+//         lastMessage,
+//       };
+//     }),
+//   );
+
+//   return conversationsWithDetails;
+// };
+
+
+
+const getConversationsForUser = async (userId: string, searchTerm?: string,) => {
   const userIdObj = new mongoose.Types.ObjectId(userId);
 
+  // 1. Get blocked users list
+  const blockedUsers = await BlockedUserModel.find({
+    blockerUserid: userIdObj,
+    isBlocked : true
+  }).select("blockedUserid");
+
+  const blockedIds = blockedUsers.map((b) =>
+    b.blockedUserid.toString(),
+  );
+
+  // 2. Aggregation
   const aggregation: any[] = [
-    // Match conversations for the user
     {
       $match: {
-        $or: [{ participantAId: userIdObj }, { participantBId: userIdObj }],
+        $or: [
+          { participantAId: userIdObj },
+          { participantBId: userIdObj },
+        ],
       },
     },
-    // Populate participants
+
+    // participant A details
     {
       $lookup: {
         from: "users",
@@ -141,6 +258,8 @@ const getConversationsForUser = async (userId: string, searchTerm?: string) => {
       },
     },
     { $unwind: "$participantADetails" },
+
+    // participant B details
     {
       $lookup: {
         from: "users",
@@ -150,30 +269,45 @@ const getConversationsForUser = async (userId: string, searchTerm?: string) => {
       },
     },
     { $unwind: "$participantBDetails" },
-    // Add a field for the other participant
+
+    // other participant
     {
       $addFields: {
         otherParticipant: {
           $cond: {
-            if: { $eq: ["$participantADetails._id", userIdObj] },
+            if: {
+              $eq: ["$participantADetails._id", userIdObj],
+            },
             then: "$participantBDetails",
             else: "$participantADetails",
           },
         },
       },
     },
+
+    // BLOCK FILTER (MAIN LOGIC)
+    {
+      $match: {
+        "otherParticipant._id": {
+          $nin: blockedIds.map(id => new mongoose.Types.ObjectId(id)),
+        },
+      },
+    },
   ];
 
-  // Filter by search term
+  // 3. Search filter
   if (searchTerm) {
     aggregation.push({
       $match: {
-        "otherParticipant.fullName": { $regex: searchTerm, $options: "i" },
+        "otherParticipant.fullName": {
+          $regex: searchTerm,
+          $options: "i",
+        },
       },
     });
   }
 
-  // Restore original participant fields and clean up
+  // 4. Cleanup
   aggregation.push(
     {
       $addFields: {
@@ -190,13 +324,15 @@ const getConversationsForUser = async (userId: string, searchTerm?: string) => {
     },
   );
 
+  // 5. Execute aggregation
   const conversations = await Conversation.aggregate(aggregation);
 
+  // 6. Add last message + unread count
   const conversationsWithDetails = await Promise.all(
     conversations.map(async (conversation) => {
       const unreadMessagesCount = await Message.countDocuments({
         conversationId: conversation._id,
-        senderId: { $ne: userId },
+        senderId: { $ne: userIdObj },
         isRead: false,
       });
 

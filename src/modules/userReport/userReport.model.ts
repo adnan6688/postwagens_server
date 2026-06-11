@@ -28,9 +28,6 @@ const reportedUserSchema = new Schema<ReportedUser>(
   { timestamps: true },
 );
 
-const ReportedUserModel = mongoose.model<ReportedUser>(
-  "ReportedUser",
-  reportedUserSchema,
-);
+const ReportedUserModel = mongoose.model<ReportedUser>("ReportedUser", reportedUserSchema,);
 
 export default ReportedUserModel;

@@ -10,7 +10,7 @@ const messageSchema = new Schema<IMessage>(
     },
     senderId: {
       type: Schema.Types.ObjectId,
-      ref: 'user',
+      ref: 'User',
       required: true,
     },
     listing: {

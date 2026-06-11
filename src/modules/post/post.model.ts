@@ -3,7 +3,7 @@ import { TPost } from './post.interface';
 
 const postSchema = new Schema<TPost>(
   {
-    userId: { type: Schema.Types.ObjectId, ref: 'user', required: true },
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     isDeleted : {type: Boolean, default: false},
     text: { type: String, required: true },
     imagesAndVideos: [
@@ -22,7 +22,7 @@ const postSchema = new Schema<TPost>(
     toJSON: {
       virtuals: true,
       transform: (doc, ret) => {
-        // 🔁 rename userId -> user
+
         (ret as any).user = ret.userId;
         delete (ret as any).userId;
         return ret;

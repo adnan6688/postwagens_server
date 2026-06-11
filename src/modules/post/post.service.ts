@@ -11,9 +11,7 @@ import {
 import "../users/user.model";
 import { BoostService } from "../boosts/boost.service";
 import mongoose from "mongoose";
-import BlockedUserModel from "../userBlocked/userBlocked.model";
-import { Comment } from "../comments/comment.model";
-import { Like } from "../likes/like.model";
+
 
 // Create Post
 const createPostService = async (payload: TPost, user: JwtPayload, files: Express.Multer.File[],) => {
@@ -42,10 +40,13 @@ const createPostService = async (payload: TPost, user: JwtPayload, files: Expres
 
 // Get My Posts
 const getMyPostsService = async (user: JwtPayload) => {
+
+
   const posts = await Post.find({ userId: user.userId }).populate(
     "userId",
     "fullName email",
   );
+
   return posts;
 };
 

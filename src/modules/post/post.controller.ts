@@ -7,6 +7,7 @@ import { JwtPayload } from 'jsonwebtoken';
 
 // Create Post
 const createPost = CatchAsync(async (req: Request, res: Response) => {
+
   const result = await postServices.createPostService(
     req.body,
     req.user as JwtPayload,
@@ -23,6 +24,7 @@ const createPost = CatchAsync(async (req: Request, res: Response) => {
 
 // Get My Posts
 const getMyPosts = CatchAsync(async (req: Request, res: Response) => {
+  console.log("get-my post",)
   const result = await postServices.getMyPostsService(req.user as JwtPayload);
 
   SendResponse(res, {

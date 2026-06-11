@@ -10,7 +10,7 @@ const commentSchema = new Schema<TComment, CommentModel>(
     },
     userId: {
       type: Schema.Types.ObjectId,
-      ref: 'user',
+      ref: 'User',
       required: true,
     },
     parentId: {
@@ -41,7 +41,7 @@ const commentSchema = new Schema<TComment, CommentModel>(
 );
 
 commentSchema.virtual('user', {
-  ref: 'user',
+  ref: 'User',
   localField: 'userId',
   foreignField: '_id',
   justOne: true,

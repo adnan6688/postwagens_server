@@ -48,7 +48,7 @@ const listingSchema = new Schema<IListing>(
 );
 
 // listingSchema.virtual('seller', {
-//   ref: 'user',
+//   ref: 'User',
 //   localField: 'sellerId',
 //   foreignField: '_id',
 //   justOne: true,

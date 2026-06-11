@@ -10,7 +10,7 @@ const notificationSchema = new Schema<INotification, NotificationModel>(
   {
     userId: {
       type: Schema.Types.ObjectId,
-      ref: 'user',
+      ref: 'User',
     },
     targetRole: {
       type: String,
@@ -18,7 +18,7 @@ const notificationSchema = new Schema<INotification, NotificationModel>(
     },
     actorId: {
       type: Schema.Types.ObjectId,
-      ref: 'user',
+      ref: 'User',
       required: true,
     },
     type: {
@@ -35,7 +35,7 @@ const notificationSchema = new Schema<INotification, NotificationModel>(
       },
       userId: {
         type: Schema.Types.ObjectId,
-        ref: 'user',
+        ref: 'User',
       },
       postId: {
         type: Schema.Types.ObjectId,

@@ -10,7 +10,7 @@ const boostSchema = new Schema<IBoost>(
     },
     userId: {
       type: Schema.Types.ObjectId,
-      ref: 'user',
+      ref: 'User',
       required: true,
     },
     startAt: { type: Date, required: true },

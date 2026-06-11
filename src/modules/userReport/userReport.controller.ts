@@ -164,7 +164,7 @@ export const reportUser = async (req: Request, res: Response) => {
     let reportType;
     let userToReport: any;
     let targetBlockedId: string | undefined;
-    let userInfoToSave: any;
+
 
     if (type === "post") {
       reportType = "post";
@@ -186,7 +186,6 @@ export const reportUser = async (req: Request, res: Response) => {
 
     const userInfo = await User.findById(targetBlockedId);
 
-    console.log(userInfo);
 
     if (!userInfo) {
       return res.status(404).json({ message: "User information not found" });
@@ -283,7 +282,7 @@ export const getAllReports = async (req: Request, res: Response) => {
 
 export const deleteReport = async (req: Request, res: Response) => {
   try {
-    const { _id } = req.query; 
+    const { _id } = req.query;
     const report = await ReportedUserModel.findById(_id);
 
     if (!report) {

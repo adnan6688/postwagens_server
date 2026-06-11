@@ -5,12 +5,12 @@ const conversationSchema = new Schema<IConversation>(
   {
     participantAId: {
       type: Schema.Types.ObjectId,
-      ref: 'user',
+      ref: 'User',
       required: true,
     },
     participantBId: {
       type: Schema.Types.ObjectId,
-      ref: 'user',
+      ref: 'User',
       required: true,
     },
   },
