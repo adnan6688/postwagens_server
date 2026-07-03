@@ -60,48 +60,114 @@ const getUserBoosts = async (userId: string) => {
   return boosts;
 };
 
-const getActiveBoosts = async () => {
-  const boosts = await Boost.find({ endAt: { $gte: new Date() } }).populate(
-    'listingId userId',
-    'fullName avatar isVerified title description price imagesAndVideos category location condition',
-  );
-  return boosts;
+const getActiveBoosts = async (page = 1, limit = 10,) => {
+  const skip = (page - 1) * limit;
+
+  const filter = {
+    endAt: { $gte: new Date() },
+  };
+
+  const total = await Boost.countDocuments(filter);
+
+  const boosts = await Boost.find(filter).populate({
+    path: 'listingId',
+    select: '+imagesAndVideos title price viewCount',
+  })
+    .populate({
+      path: 'userId',
+      select: 'fullName',
+    })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  const totalPages = Math.ceil(total / limit);
+
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+      totalPages
+    },
+    data: boosts,
+  };
 };
 
-const getRevenueOverview = async (year: number) => {
+
+const monthNames = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+];
+
+export const getRevenueOverview = async (year: number) => {
   const result = await Boost.aggregate([
     {
       $match: {
         $expr: {
-          $eq: [{ $year: '$createdAt' }, year],
+          $eq: [{ $year: "$createdAt" }, year],
         },
       },
     },
     {
       $group: {
-        _id: {
-          year: { $year: '$createdAt' },
-          month: { $month: '$createdAt' },
-        },
-        totalRevenue: { $sum: '$price' },
+        _id: { month: { $month: "$createdAt" } },
+        totalRevenue: { $sum: "$price" },
       },
     },
     {
-      $sort: {
-        '_id.year': 1,
-        '_id.month': 1,
-      },
-    },
-    {
-      $project: {
-        _id: 0,
-        year: '$_id.year',
-        month: '$_id.month',
-        totalRevenue: 1,
-      },
+      $sort: { "_id.month": 1 },
     },
   ]);
-  return result;
+
+  // normalize for frontend chart
+  const formatted = monthNames.map((name, index) => {
+    const found = result.find(r => r._id.month === index + 1);
+
+    return {
+      month: name,
+      totalRevenue: found?.totalRevenue || 0,
+    };
+  });
+
+  return formatted;
+};
+
+
+
+
+const getBoostStats = async () => {
+  const now = new Date();
+
+  const [totalBoosts, activeBoosts, expiredBoosts, revenue] =
+    await Promise.all([
+      Boost.countDocuments(),
+
+      Boost.countDocuments({
+        startAt: { $lte: now },
+        endAt: { $gte: now },
+      }),
+
+      Boost.countDocuments({
+        endAt: { $lt: now },
+      }),
+
+      Boost.aggregate([
+        {
+          $group: {
+            _id: null,
+            total: { $sum: "$price" },
+          },
+        },
+      ]),
+    ]);
+
+  return {
+    totalBoosts,
+    activeBoosts,
+    expiredBoosts,
+    totalRevenue: revenue[0]?.total || 0,
+  };
 };
 
 export const BoostService = {
@@ -110,4 +176,5 @@ export const BoostService = {
   getUserBoosts,
   getActiveBoosts,
   getRevenueOverview,
+  getBoostStats
 };

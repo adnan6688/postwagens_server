@@ -25,11 +25,11 @@ const boostSchema = new Schema<IBoost>(
     toJSON: {
       virtuals: true,
       transform(doc, ret) {
-        // 🔁 rename populated fields
+        // rename populated fields
         (ret as any).user = ret.userId;
         (ret as any).listing = ret.listingId;
 
-        // ❌ remove raw ids
+        //  remove raw ids
         delete (ret as any).userId;
         delete (ret as any).listingId;
 

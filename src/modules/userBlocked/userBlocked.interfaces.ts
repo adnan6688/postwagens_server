@@ -1,9 +1,9 @@
 import { Types } from "mongoose";
 
 export interface BlockedUser {
-    blockerUserid: Types.ObjectId;
+  blockerUserid: Types.ObjectId;
   blockedUserid: Types.ObjectId;
-  isBlocked: boolean; 
+  isBlocked: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

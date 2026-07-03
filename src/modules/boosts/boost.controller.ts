@@ -41,15 +41,19 @@ const getUserBoosts = CatchAsync(async (req, res) => {
 });
 
 const getActiveBoosts = CatchAsync(async (req, res) => {
-  const result = await BoostService.getActiveBoosts();
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+
+  const result = await BoostService.getActiveBoosts(page, limit,);
+
   SendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
     message: 'Active boosts retrieved successfully',
-    data: result,
+    data: result.data,
+    meta: result.meta,
   });
 });
-
 const getRevenueOverview = CatchAsync(async (req, res) => {
   const year = Number(req.query.year || new Date().getFullYear());
   const result = await BoostService.getRevenueOverview(year);
@@ -61,10 +65,23 @@ const getRevenueOverview = CatchAsync(async (req, res) => {
   });
 });
 
+
+const getBoostStats = CatchAsync(async (req, res) => {
+  const result = await BoostService.getBoostStats()
+
+  SendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Boost stats',
+    data: result
+  })
+})
+
 export const BoostController = {
   boostListing,
   getListingBoosts,
   getUserBoosts,
   getActiveBoosts,
   getRevenueOverview,
+  getBoostStats
 };

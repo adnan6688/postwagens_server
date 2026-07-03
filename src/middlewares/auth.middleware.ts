@@ -12,9 +12,11 @@ export const checkAuth = (...restRole: string[]) => async (req: Request, res: Re
 
 
 
-    const authHeader = req.headers.authorization;
+
+    const authHeader = req.headers.authorization ;
 
     const accessToken = authHeader?.startsWith("Bearer ") ? authHeader.split(" ")[1] : authHeader;
+
 
     if (!accessToken) {
       throw new AppError(httpStatus.UNAUTHORIZED, 'Token not provided!');

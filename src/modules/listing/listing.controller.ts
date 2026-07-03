@@ -7,6 +7,8 @@ import { JwtPayload } from 'jsonwebtoken';
 
 // Create Listing
 const createListing = CatchAsync(async (req: Request, res: Response) => {
+ 
+
   const result = await listingServices.createListingService(
     req.body,
     req.user as JwtPayload,
