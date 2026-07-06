@@ -156,3 +156,124 @@ export const deleteReport = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
+
+
+
+export const getReportSummary = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const search = (req.query.search as string) || "";
+
+    const skip = (page - 1) * limit;
+
+    const pipeline: any[] = [
+      {
+        $group: {
+          _id: "$userId",
+          reportCount: { $sum: 1 },
+          userInfo: { $first: "$userInfo" },
+        },
+      },
+    ];
+
+    // Search by name or email
+    if (search) {
+      pipeline.push({
+        $match: {
+          $or: [
+            {
+              "userInfo.fullName": {
+                $regex: search,
+                $options: "i",
+              },
+            },
+            {
+              "userInfo.email": {
+                $regex: search,
+                $options: "i",
+              },
+            },
+          ],
+        },
+      });
+    }
+
+    pipeline.push(
+      {
+        $project: {
+          _id: 0,
+          userId: "$_id",
+          fullName: "$userInfo.fullName",
+          email: "$userInfo.email",
+          profilePhoto: "$userInfo.profilePhoto",
+          role : "$userInfo.role",
+          reportCount: 1,
+          level: {
+            $switch: {
+              branches: [
+                {
+                  case: { $lt: ["$reportCount", 5] },
+                  then: "Normal",
+                },
+                {
+                  case: { $eq: ["$reportCount", 5] },
+                  then: "Medium",
+                },
+                {
+                  case: { $gt: ["$reportCount", 5] },
+                  then: "Dangerous",
+                },
+              ],
+              default: "Normal",
+            },
+          },
+        },
+      },
+      {
+        $sort: {
+          reportCount: -1,
+        },
+      },
+      {
+        $facet: {
+          data: [
+            { $skip: skip },
+            { $limit: limit },
+          ],
+          totalCount: [
+            {
+              $count: "count",
+            },
+          ],
+        },
+      }
+    );
+
+    const result = await ReportedUserModel.aggregate(pipeline);
+
+    const reports = result[0].data;
+    const total = result[0].totalCount[0]?.count || 0;
+
+    return res.status(200).json({
+      success: true,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      data: reports,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};

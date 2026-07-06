@@ -87,4 +87,6 @@ router.put(
 )
 
 router.get('/recentUser', checkAuth(Role.ADMIN) , userControllers.recentUsers)
+
+router.patch('/user-update_status/:userId/:type' , checkAuth(Role.ADMIN) , userControllers.updateUserStatus)
 export const userRoutes = router;

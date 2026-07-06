@@ -187,6 +187,41 @@ const recentUsers = CatchAsync(async (req: Request, res: Response) => {
     data: data,
   });
 })
+
+const updateUserStatus = CatchAsync(async (req: Request, res: Response) => {
+  const { userId, type } = req.params;
+
+  // Validate status
+  if (!Object.values(IsActive).includes(type as IsActive)) {
+    throw new AppError(400, "Invalid status");
+  }
+
+  const result = await User.findByIdAndUpdate(
+    userId,
+    {
+      isActive: type,
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  if (!result) {
+    throw new AppError(404, "User not found");
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "User status updated successfully",
+    data: result,
+  });
+});
+
+
+
+
+
 // EXPORT ALL CONTROLLERS
 export const userControllers = {
   registerUser,
@@ -199,5 +234,6 @@ export const userControllers = {
   purchaseBadge,
   updateSuspendStatus,
   getProfile,
-  recentUsers
+  recentUsers, 
+  updateUserStatus
 };
