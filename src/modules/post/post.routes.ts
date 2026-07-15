@@ -22,7 +22,7 @@ router.post(
   postControllers.createPost,
 );
 
-router.get('/', checkAuth(...Object.values(Role)), postControllers.getAllPosts);
+router.get('/',  postControllers.getAllPosts);
 
 router.get(
   '/my-posts',

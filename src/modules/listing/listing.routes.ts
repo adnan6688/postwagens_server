@@ -33,7 +33,6 @@ router.get(
 
 router.get(
   '/',
-  checkAuth(...Object.values(Role)),
   listingControllers.getAllListings,
 );
 
