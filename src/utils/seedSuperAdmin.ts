@@ -6,12 +6,12 @@ import bcrypt from 'bcrypt'
 export const seedSuperAdmin = async () => {
 
 
-    const ckAdmin = await User.findOne({ email: env.EMAIL_USER })
+    const ckAdmin = await User.findOne({ email: env.EMAIL_FROM })
     const hash = await bcrypt.hash(env.EMAIL_PASSWORD as string, Number(env.BCRYPT_SALT_ROUND))
     if (!ckAdmin) {
 
         await User.create({
-            email: env.EMAIL_USER,
+            email: env.EMAIL_FROM,
             password: hash, // plain password
             fullName: 'Joseph Murray',
             role: Role.ADMIN,
