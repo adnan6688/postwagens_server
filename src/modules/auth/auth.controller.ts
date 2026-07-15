@@ -14,6 +14,8 @@ import env from '../../config/env';
 
 // Login User
 const credentialsLogin = CatchAsync(async (req: Request, res: Response, next: NextFunction) => {
+
+  
   passport.authenticate('local', async (err: any, user: any, info: any) => {
     if (err) next(err);
 

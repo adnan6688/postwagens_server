@@ -43,6 +43,8 @@ passport.use(
           user.password as string
         );
 
+        console.log("password match" , isMatchPassowrd)
+
   
         if (!isMatchPassowrd) {
           return done(null, false, { message: 'Incorrect password!' });

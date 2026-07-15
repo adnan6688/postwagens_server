@@ -7,12 +7,12 @@ export const seedSuperAdmin = async () => {
 
 
     const ckAdmin = await User.findOne({ email: env.EMAIL_FROM })
-    const hash = await bcrypt.hash(env.EMAIL_PASSWORD as string, Number(env.BCRYPT_SALT_ROUND))
+
     if (!ckAdmin) {
 
         await User.create({
             email: env.EMAIL_FROM,
-            password: hash, // plain password
+            password: env.EMAIL_PASSWORD, // plain password
             fullName: 'Joseph Murray',
             role: Role.ADMIN,
             isVerified : true,
