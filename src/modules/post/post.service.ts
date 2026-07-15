@@ -487,7 +487,8 @@ const getAllPostsService = async (query: Record<string, any>, user: JwtPayload) 
   // ======================
   // BOOST FEED MIX (JS SIDE)
   // ======================
-  let activeBoosts = await BoostService.getActiveBoosts();
+  let activeBoostsResponse = await BoostService.getActiveBoosts();
+  let activeBoosts = activeBoostsResponse.data;
 
   const shuffleArray = (array: any[]) => {
     for (let i = array.length - 1; i > 0; i--) {
